@@ -8,79 +8,88 @@
 import SwiftUI
 
 struct ContentView: View {
-    static let allAnswers = ["🪨", "📜", "✂️"]
+    let moves = ["✊", "✋", "✌️"]
     
-    @State private var computerChoice = allAnswers.shuffled()
-    @State private var playerSelection = Bool.random()
-    @State private var computerSelection = Int.random(in: 0...2)
+    @State private var computerChoice = Int.random(in: 0..<3)
+    @State private var shouldWin = Bool.random()
     @State private var score = 0
+    
+    @State private var questionCount = 1
+    @State private var showingResults = false
     
     
     var body: some View {
         VStack {
-            Text("Score: \(score)")
-                .font(.largeTitle.bold())
-                .foregroundStyle(.blue)
-        }
-        .padding()
-        
-        VStack {
-            Text(computerChoice[computerSelection])
-                .font(.system(size: 100))
-            if playerSelection == true {
-                Text("Choose the winning move")
-                    .foregroundStyle(.blue)
+            Spacer()
+            
+            Text("Computer has played...")
+                .font(.headline)
+            Text(moves[computerChoice])
+                .font(.system(size: 200))
+            
+            if shouldWin {
+                Text("Which one wins?")
+                    .foregroundStyle(.green)
+                    .font(.title)
             } else {
-                Text("Choose the losing move")
+                Text("Which one loses?")
                     .foregroundStyle(.red)
-            }
-        }
-        
-        Spacer()
-        
-        HStack {
-            Button {
-                if computerChoice[computerSelection] == "✂️" && playerSelection == true {
-                    score += 1
-                    askQuestion()
-                } else if computerChoice[computerSelection] == "📜" && playerSelection == false {
-                    score += 1
-                    askQuestion()
-                }
-            } label: {
-                Text("Rock")
+                    .font(/*@START_MENU_TOKEN@*/.title/*@END_MENU_TOKEN@*/)
             }
             
-            Button {
-                if computerChoice[computerSelection] == "🪨" && playerSelection == true {
-                    score += 1
-                    askQuestion()
-                } else if computerChoice[computerSelection] == "✂️" && playerSelection == false {
-                    score += 1
-                    askQuestion()
+            HStack {
+                ForEach(0..<3) { number in
+                    Button(moves[number]) {
+                        play(choice: number)
+                    }
+                    .font(.system(size: 80))
                 }
-            } label: {
-                Text("Paper")
             }
             
-            Button {
-                if computerChoice[computerSelection] == "📜" && playerSelection == true {
-                    score += 1
-                    askQuestion()
-                } else if computerChoice[computerSelection] == "🪨" && playerSelection == false {
-                    score += 1
-                    askQuestion()
-                }
-            } label: {
-                Text("Scissors")
-            }
+            Spacer()
+            
+            Text("Score: \(score)")
+                .font(.subheadline)
+            
+            Spacer()
         }
-        Spacer()
+        .alert("Game over", isPresented: $showingResults) {
+            Button("Play again", action: reset)
+        } message: {
+            Text("Your score was \(score)")
+        }
     }
     
-    func askQuestion() {
-        computerChoice.shuffle()
-        playerSelection.toggle()
+    func play(choice: Int) {
+        let winningMoves = [1, 2, 0]
+        let didWin: Bool
+        
+        if shouldWin {
+            didWin = choice == winningMoves[computerChoice]
+        } else {
+            didWin = winningMoves[choice] == computerChoice
+        }
+        
+        if didWin {
+            score += 1
+        } else {
+            score -= 1
+        }
+        
+        if questionCount == 10 {
+            showingResults = true
+        } else {
+            computerChoice = Int.random(in: 0..<3)
+            shouldWin.toggle()
+            questionCount += 1
+        }
+    }
+    
+    func reset() {
+        computerChoice = Int.random(in: 0..<3)
+        shouldWin = Bool.random()
+        questionCount = 1
+        score = 0
     }
 }
 
